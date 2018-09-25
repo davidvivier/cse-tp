@@ -23,6 +23,33 @@ sbit LED = P1^6; // Led verte embarquée sur la carte
 
 
 
+void config_serie() {
+	
+	
+	
+	// Timer 1
+	// bit 4 de CKCON à 1 pour utiliser system clock
+	CKCON |= 0x10;
+	// bit 6 de TCON à 1 pour l'activer
+	TCON |= 0x40;
+	// bits 7,6,4 de TMOD à 0
+	TMOD &= ~0x13;
+	// bit 5 de TMOD à 1
+	TMOD |= 0x20;
+	// valeur de reload = 112
+	TH1 = 112;
+	
+	// UART0 en mode 1 (asynchrone 8 bits)
+	
+	// bits 7,0 à 0
+	SCON0 &= ~0x81;
+	// bits 6,5,4,1 à 1
+	SCON0 |= 0x72;
+	// baud rate divide-by-two disabled
+	PCON |= 0x80;
+	
+}
+
 //------------------------------------------------------------------------------------
 // MAIN Routine
 //------------------------------------------------------------------------------------
@@ -40,8 +67,9 @@ void main (void)
 	// broche P1.6 (green led) en mode 0 open-drain
 	P1MDOUT |= 0x40;
 	
-	// sortie LED à 1 pour allumer
-	//LED = 1;
+	config_serie();
+	
+	SBUF0 = 'c';
   
   while (1)
   {
