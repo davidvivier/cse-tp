@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include "init.h"
 
+void fct_tempo(int csg_tempo);
 
 sbit LED = P1^6; // Led verte embarquée sur la carte
 
@@ -40,10 +41,14 @@ void main (void)
 	P1MDOUT |= 0x40;
 	
 	// sortie LED à 1 pour allumer
-	LED = 1;
+	//LED = 1;
   
   while (1)
   {
+		fct_tempo(500*1000);
+		LED = 1;
+		fct_tempo(500*1000);
+		LED = 0;
 		
 	}	 	 
 }
