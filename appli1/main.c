@@ -21,6 +21,7 @@ void fct_tempo(int csg_tempo);
 
 sbit LED = P1^6; // Led verte embarquée sur la carte
 
+sbit RHT = P2^0;
 
 
 void config_serie() {
@@ -50,6 +51,21 @@ void config_serie() {
 	
 }
 
+void rht_input_mode() {
+	
+	// Pin 2.0
+	
+	// open drain
+	P2MDOUT &= ~0x01;
+	
+	RHT = 1;
+	
+}
+
+void rht_output_mode() {
+	P2MDOUT |= 0x01;
+}
+
 //------------------------------------------------------------------------------------
 // MAIN Routine
 //------------------------------------------------------------------------------------
@@ -69,14 +85,21 @@ void main (void)
 	
 	config_serie();
 	
+	rht_input_mode();
+	
+	rht_output_mode();
+	
 	SBUF0 = 'c';
   
   while (1)
   {
-		fct_tempo(500*1000);
+		fct_tempo(5*000*1000);
 		LED = 1;
-		fct_tempo(500*1000);
+		RHT = 1;
+		
+		fct_tempo(5*1000*1000);
 		LED = 0;
+		RHT = 0;
 		
 	}	 	 
 }
