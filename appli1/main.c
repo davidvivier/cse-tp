@@ -93,14 +93,21 @@ void main (void)
   
   while (1)
   {
-		fct_tempo(5*000*1000);
-		LED = 1;
+		//fct_tempo(19*1000);
+		//LED = 1;
 		RHT = 1;
 		
-		fct_tempo(5*1000*1000);
-		LED = 0;
+		// DOWN for 19ms
 		RHT = 0;
+		fct_tempo(19*1000);
+		//LED = 0;
 		
+		// UP and wait response
+		RHT = 1;
+		fct_tempo(20);
+		
+		rht_input_mode();
+		fct_tempo(25*1000);
 	}	 	 
 }
 
