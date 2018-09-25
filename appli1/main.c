@@ -30,6 +30,17 @@ void main (void)
 	
   Init_Device();
 
+	// crossbar
+	XBR0      = 0x04;
+	XBR2      = 0x40;
+	
+	// green led
+	
+	// broche P1.6 (green led) en mode 0 open-drain
+	P1MDOUT |= 0x40;
+	
+	// sortie LED à 1 pour allumer
+	LED = 1;
   
   while (1)
   {
