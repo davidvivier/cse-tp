@@ -28,8 +28,18 @@ sbit RHT = P2^0;
 
 int i = 0;
 int j = 0;
+int m = 0;
+char octet = 0;
+char bit_value = 0;
 
 char buf[BUF_SIZE];
+
+
+// '0' est à 48 ascii
+char ascii[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+
+int hum = 0;
+int temp = 0;
 
 void config_serie() {
 	
@@ -76,6 +86,63 @@ void send_buf(int length) {
 		SBUF0 = buf[i];
 		while(!TI0);
 	}
+}
+
+char ascii_value(int v) {
+	/*for (i = 0; i < 10; i++) {
+		if (ascii[i] == v) {
+			return i;
+		}
+	}*/
+	return 0;
+}
+
+char get_octet(int pos) {
+	m = 128;
+	i = 0;
+	
+	octet = 0;
+	
+	for (i = 0; i < 8; i++) {
+		if (buf[pos+i] == '0') {
+			bit_value = 0;
+		} else {
+			bit_value = 1;
+		}
+		octet += m * bit_value;
+		m /= 2;
+	}
+	return octet;
+}
+
+void convert_values() {
+	
+	temp = get_octet(0);
+	hum = get_octet(16);
+	
+}
+
+void prepare_result() {
+	clear_buf();
+	i = 0;
+	buf[i++] = 'T';
+	buf[i++] = '=';
+	buf[i++] = ascii[temp/10];
+	buf[i++] = ascii[temp%10];
+	buf[i++] = '°';
+	buf[i++] = 'C';
+	buf[i++] = ' ';
+	
+	buf[i++] = 'R';
+	buf[i++] = 'H';
+	buf[i++] = '=';
+	buf[i++] = ascii[hum/10];
+	buf[i++] = ascii[hum%10];
+	buf[i++] = '%';
+	
+	buf[i++] = '\r';
+	buf[i++] = '\n';
+	buf[i++] = '\0';
 }
 	
 void rht_input_mode() {
@@ -184,7 +251,9 @@ void main (void)
 		// now we receive the response
 		clear_buf();
 		rht_receive();
-		send_buf(42);
+		convert_values();
+		prepare_result();
+		send_buf(15);
 		
 		wait_sec(2);
 	}	 	 
