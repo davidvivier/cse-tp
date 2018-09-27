@@ -21,7 +21,11 @@ void fct_tempo(int csg_tempo);
 
 sbit LED = P1^6; // Led verte embarquée sur la carte
 
+//sbit RHT = P2^0;
 sbit RHT = P2^0;
+
+int i = 0;
+int j = 0;
 
 
 void config_serie() {
@@ -51,12 +55,19 @@ void config_serie() {
 	
 }
 
+void wait_sec(int seconds) {
+	for( i = 0 ; i < seconds * 1000; i++ ) {
+		fct_tempo(1000);
+	}
+}
+
 void rht_input_mode() {
 	
 	// Pin 2.0
 	
 	// open drain
 	P2MDOUT &= ~0x01;
+	P2MDOUT &= ~0x02;
 	
 	RHT = 1;
 	
@@ -64,7 +75,48 @@ void rht_input_mode() {
 
 void rht_output_mode() {
 	P2MDOUT |= 0x01;
+	P2MDOUT |= 0x02;
 }
+
+void rht_wait_one() {
+	while (RHT != 1);
+}
+
+void rht_wait_zero() {
+	while (RHT != 0);
+}
+
+void rht_receive() {
+	
+	rht_wait_one();
+	
+	rht_wait_zero();
+	
+	LED=1;
+	
+	i = 0;
+	do {
+	
+		rht_wait_one();
+	
+		fct_tempo(50);
+	
+		if (RHT == 0) {
+			// bit 0 reçu
+			SBUF0 = '0';
+		} else if (RHT == 1) {
+			// bit 1 reçu
+			SBUF0 = '1';
+			
+		}
+		rht_wait_zero();
+		i++;
+	} while( i < (4*8 + 8) );
+	
+	SBUF0 = 'e';
+	SBUF0 = '\n';
+}
+
 
 //------------------------------------------------------------------------------------
 // MAIN Routine
@@ -85,17 +137,19 @@ void main (void)
 	
 	config_serie();
 	
-	rht_input_mode();
+	//rht_input_mode();
 	
 	rht_output_mode();
 	
-	SBUF0 = 'c';
+	SBUF0 = 's';
   
   while (1)
   {
 		//fct_tempo(19*1000);
 		//LED = 1;
 		RHT = 1;
+		
+		LED = 0;
 		
 		// DOWN for 19ms
 		RHT = 0;
@@ -107,7 +161,11 @@ void main (void)
 		fct_tempo(20);
 		
 		rht_input_mode();
-		fct_tempo(25*1000);
+		
+		// now we receive the response
+		rht_receive();
+		
+		wait_sec(2);
 	}	 	 
 }
 
