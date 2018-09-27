@@ -17,6 +17,8 @@
 #include <stdio.h>
 #include "init.h"
 
+#define BUF_SIZE 50
+
 void fct_tempo(int csg_tempo);
 
 sbit LED = P1^6; // Led verte embarquée sur la carte
@@ -27,6 +29,7 @@ sbit RHT = P2^0;
 int i = 0;
 int j = 0;
 
+char buf[BUF_SIZE];
 
 void config_serie() {
 	
@@ -61,6 +64,20 @@ void wait_sec(int seconds) {
 	}
 }
 
+void clear_buf() {
+	for (i = 0; i < BUF_SIZE; i++) {
+		buf[i] = 0;
+	}
+}
+
+void send_buf(int length) {
+	for (i = 0; i < length; i++) {
+		TI0 = 0;
+		SBUF0 = buf[i];
+		while(!TI0);
+	}
+}
+	
 void rht_input_mode() {
 	
 	// Pin 2.0
@@ -92,29 +109,31 @@ void rht_receive() {
 	
 	rht_wait_zero();
 	
-	LED=1;
+	LED=0;
 	
 	i = 0;
 	do {
 	
 		rht_wait_one();
-	
+		
 		fct_tempo(50);
-	
+		
 		if (RHT == 0) {
 			// bit 0 reçu
-			SBUF0 = '0';
+			LED=1;
+			buf[i] = '0';
 		} else if (RHT == 1) {
 			// bit 1 reçu
-			SBUF0 = '1';
-			
+			LED=1;
+			buf[i] = '1';
 		}
 		rht_wait_zero();
+		LED=0;
 		i++;
-	} while( i < (4*8 + 8) );
+	} while( i < 40 );
 	
-	SBUF0 = 'e';
-	SBUF0 = '\n';
+	buf[i++] = 'e';
+	buf[i++] = '\n';
 }
 
 
@@ -163,7 +182,9 @@ void main (void)
 		rht_input_mode();
 		
 		// now we receive the response
+		clear_buf();
 		rht_receive();
+		send_buf(42);
 		
 		wait_sec(2);
 	}	 	 
