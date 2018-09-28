@@ -96,6 +96,9 @@ void config_spi() {
 		P0MDOUT |= 0x14;
 		P0MDOUT &= ~0x08;
 	
+		// commande NSS sur P0.6
+		P0MDOUT |= 0x40;
+	
 	#else
 		SPI0CN |= 0x01;
 		P0MDOUT |= 0x04;
@@ -296,7 +299,10 @@ void main (void)
 		
 		// envoi par SPI
 		LED = 1;
+		SS = 1;
 		SPI0DAT = 0xA5;
+		SS = 0;
+		SBUF0 = SPI0DAT;
 		
 		wait_sec(2);
 		LED = 0;
