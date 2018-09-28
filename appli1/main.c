@@ -19,12 +19,16 @@
 
 #define BUF_SIZE 50
 
+#define MASTER
+
 void fct_tempo(int csg_tempo);
 
-sbit LED = P1^6; // Led verte embarquée sur la carte
+sbit LED = P1^6; // Led verte embarquee sur la carte
 
 //sbit RHT = P2^0;
 sbit RHT = P2^0;
+
+sbit SS = P0^6;
 
 int i = 0;
 int j = 0;
@@ -33,6 +37,7 @@ char octet = 0;
 char bit_value = 0;
 
 char buf[BUF_SIZE];
+
 
 
 // '0' est à 48 ascii
@@ -73,6 +78,36 @@ void wait_sec(int seconds) {
 		fct_tempo(1000);
 	}
 }
+void config_spi() {
+	// crossbar
+	
+	  XBR0      = 0x06;
+    XBR2      = 0x40;
+	
+	// phase, polarite et taille de trame
+	SPI0CFG |= 0xC7;
+	
+	SPI0CN &= ~0x80;
+	
+	#ifdef MASTER
+		SPI0CN |= 0x03;
+	
+		// push pull
+		P0MDOUT |= 0x14;
+		P0MDOUT &= ~0x08;
+	
+	#else
+		SPI0CN |= 0x01;
+		P0MDOUT |= 0x04;
+		P0MDOUT &= ~0x34;
+	#endif
+	
+	// clockrate
+	SPI0CKR = 255;
+	
+	
+}
+
 
 void clear_buf() {
 	for (i = 0; i < BUF_SIZE; i++) {
@@ -171,12 +206,13 @@ void rht_wait_zero() {
 }
 
 void rht_receive() {
+
 	
 	rht_wait_one();
 	
 	rht_wait_zero();
 	
-	LED=0;
+	//LED=0;
 	
 	i = 0;
 	do {
@@ -187,21 +223,22 @@ void rht_receive() {
 		
 		if (RHT == 0) {
 			// bit 0 reçu
-			LED=1;
+			//LED=1;
 			buf[i] = '0';
 		} else if (RHT == 1) {
 			// bit 1 reçu
-			LED=1;
+			//LED=1;
 			buf[i] = '1';
 		}
 		rht_wait_zero();
-		LED=0;
+		//LED=0;
 		i++;
 	} while( i < 40 );
 	
 	buf[i++] = 'e';
 	buf[i++] = '\n';
 }
+
 
 
 //------------------------------------------------------------------------------------
@@ -222,6 +259,8 @@ void main (void)
 	P1MDOUT |= 0x40;
 	
 	config_serie();
+	
+	config_spi();
 	
 	//rht_input_mode();
 	
@@ -255,7 +294,12 @@ void main (void)
 		prepare_result();
 		send_buf(15);
 		
+		// envoi par SPI
+		LED = 1;
+		SPI0DAT = 0xA5;
+		
 		wait_sec(2);
+		LED = 0;
 	}	 	 
 }
 
