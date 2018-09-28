@@ -19,7 +19,7 @@
 
 #define BUF_SIZE 50
 
-#define MASTER
+//#define MASTER
 
 void fct_tempo(int csg_tempo);
 
@@ -101,7 +101,7 @@ void config_spi() {
 	
 	#else
 		SPI0CN |= 0x01;
-		P0MDOUT |= 0x04;
+		P0MDOUT |= 0x08;
 		P0MDOUT &= ~0x34;
 	#endif
 	
