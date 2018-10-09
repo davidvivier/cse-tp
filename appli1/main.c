@@ -29,6 +29,7 @@ sbit LED = P1^6; // Led verte embarquee sur la carte
 sbit RHT = P2^0;
 
 sbit SS = P0^6;
+sbit NSS = P0^5;
 
 int i = 0;
 int j = 0;
@@ -103,6 +104,7 @@ void config_spi() {
 		SPI0CN |= 0x01;
 		P0MDOUT |= 0x08;
 		P0MDOUT &= ~0x34;
+
 	#endif
 	
 	// clockrate
@@ -273,6 +275,8 @@ void main (void)
   
   while (1)
   {
+		#ifdef MASTER
+		
 		//fct_tempo(19*1000);
 		//LED = 1;
 		RHT = 1;
@@ -298,7 +302,7 @@ void main (void)
 		send_buf(15);
 		
 
-		#ifdef MASTER
+		
 			// envoi par SPI
 			LED = 1;
 			SS = 0;
@@ -306,6 +310,12 @@ void main (void)
 			SS = 1;
 			SBUF0 = SPI0DAT;
 			
+			wait_sec(1);
+			LED = 0;
+		#else
+		// slave : receive
+			while (NSS == 1) {
+			}
 			wait_sec(1);
 			LED = 0;
 		#endif
