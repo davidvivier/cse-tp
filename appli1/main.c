@@ -299,32 +299,45 @@ void main (void)
 		rht_receive();
 		convert_values();
 		prepare_result();
-		send_buf(15);
+
 		
 
 		
-			// envoi par SPI
-			LED = 1;
-			SS = 0;
-			SPI0DAT = 0xA5;
-			while (SPIF == 0); // wait end of SPI transmission
-			SPIF = 0;
-			SS = 1;
-			SBUF0 = SPI0DAT;
+			// envoi par SPI du buffer préparé
+			i = 0;
+			while (i < 15) {
+				LED = 1;
+				SS = 0;
+				SPI0DAT = buf[i];
+				while (SPIF == 0); // wait end of SPI transmission
+				SPIF = 0;
+				SS = 1;
 			
-			wait_sec(1);
-			LED = 0;
+				//SBUF0 = SPI0DAT;
+				
+				//wait_sec(1);
+				LED = 0;
+				i++;
+			}
+			wait_sec(2);
 		#else
 		// slave : receive
-			while (NSS == 1) {
-			}
+			clear_buf();
+			i = 0;
+			while (i < 15) {
+				while (NSS == 1) {
+				} // on attend de recevoir une transmission
 
-			LED = 0;
-			while (NSS == 0) {
+				LED = 0;
+				while (NSS == 0) {
+				} // on attend la fin de la transmission
+				// on a reçu
+				buf[i] = SPI0DAT;
+				//wait_sec(1);
+				LED = 1;
+				i++;
 			}
-			
-			wait_sec(1);
-			LED = 1;
+			send_buf(15);
 		#endif
 	}	 	 
 }
