@@ -19,7 +19,6 @@
 
 #define BUF_SIZE 50
 
-//#define MASTER
 
 void fct_tempo(int csg_tempo);
 
@@ -90,7 +89,6 @@ void config_spi() {
 	
 	SPI0CN &= ~0x80;
 	
-	#ifdef MASTER
 		SPI0CN |= 0x03;
 	
 		// push pull
@@ -100,12 +98,7 @@ void config_spi() {
 		// commande NSS sur P0.6
 		P0MDOUT |= 0x40;
 	
-	#else
-		SPI0CN |= 0x01;
-		P0MDOUT |= 0x08;
-		P0MDOUT &= ~0x34;
 
-	#endif
 	
 	// clockrate
 	SPI0CKR = 255;
@@ -211,6 +204,11 @@ void rht_wait_zero() {
 }
 
 void rht_receive() {
+	
+	
+
+	
+	
 
 	
 	rht_wait_one();
@@ -267,78 +265,15 @@ void main (void)
 	
 	config_spi();
 	
-	//rht_input_mode();
-	
-	rht_output_mode();
 	
 	SBUF0 = 's';
   
   while (1)
   {
-		#ifdef MASTER
 		
-		//fct_tempo(19*1000);
-		//LED = 1;
-		RHT = 1;
 		
-		LED = 0;
 		
-		// DOWN for 19ms
-		RHT = 0;
-		fct_tempo(19*1000);
-		//LED = 0;
-		
-		// UP and wait response
-		RHT = 1;
-		fct_tempo(20);
-		
-		rht_input_mode();
-		
-		// now we receive the response
-		clear_buf();
-		rht_receive();
-		convert_values();
-		prepare_result();
-
-		
-
-		
-			// envoi par SPI du buffer préparé
-			i = 0;
-			while (i < 15) {
-				LED = 1;
-				SS = 0;
-				SPI0DAT = buf[i];
-				while (SPIF == 0); // wait end of SPI transmission
-				SPIF = 0;
-				SS = 1;
-			
-				//SBUF0 = SPI0DAT;
-				
-				//wait_sec(1);
-				LED = 0;
-				i++;
-			}
-			wait_sec(2);
-		#else
-		// slave : receive
-			clear_buf();
-			i = 0;
-			while (i < 15) {
-				while (NSS == 1) {
-				} // on attend de recevoir une transmission
-
-				LED = 0;
-				while (NSS == 0) {
-				} // on attend la fin de la transmission
-				// on a reçu
-				buf[i] = SPI0DAT;
-				//wait_sec(1);
-				LED = 1;
-				i++;
-			}
-			send_buf(15);
-		#endif
+			//send_buf(15);
 	}	 	 
 }
 
