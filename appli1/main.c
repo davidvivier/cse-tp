@@ -297,15 +297,18 @@ void main (void)
 		prepare_result();
 		send_buf(15);
 		
-		// envoi par SPI
-		LED = 1;
-		SS = 1;
-		SPI0DAT = 0xA5;
-		SS = 0;
-		SBUF0 = SPI0DAT;
-		
-		wait_sec(2);
-		LED = 0;
+
+		#ifdef MASTER
+			// envoi par SPI
+			LED = 1;
+			SS = 0;
+			SPI0DAT = 0xA5;
+			SS = 1;
+			SBUF0 = SPI0DAT;
+			
+			wait_sec(1);
+			LED = 0;
+		#endif
 	}	 	 
 }
 
