@@ -14,3 +14,9 @@
 *.htm
 
 appli1/Executable
+
+appli1/Asm_8051_Lib\.asm
+
+appli1/Appli_Base\.uvopt
+
+appli1/Appli_Base\.uvgui\.tparlem
