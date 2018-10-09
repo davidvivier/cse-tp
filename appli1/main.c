@@ -307,6 +307,8 @@ void main (void)
 			LED = 1;
 			SS = 0;
 			SPI0DAT = 0xA5;
+			while (SPIF == 0); // wait end of SPI transmission
+			SPIF = 0;
 			SS = 1;
 			SBUF0 = SPI0DAT;
 			
@@ -316,8 +318,13 @@ void main (void)
 		// slave : receive
 			while (NSS == 1) {
 			}
-			wait_sec(1);
+
 			LED = 0;
+			while (NSS == 0) {
+			}
+			
+			wait_sec(1);
+			LED = 1;
 		#endif
 	}	 	 
 }
