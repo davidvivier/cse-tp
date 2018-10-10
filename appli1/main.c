@@ -39,6 +39,9 @@ char bit_value = 0;
 char buf[BUF_SIZE];
 
 char rep = 0;
+char ignore = 0;
+
+char cmd = 0x00;
 
 // '0' est à 48 ascii
 char ascii[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
@@ -241,17 +244,34 @@ void spi_write_byte(char byte) {
 		SPIF = 0;
 		SPI0DAT = byte;
 		while (SPIF == 0); // wait end of SPI transmission
-		// on ignore la réponse
-		rep = SPI0DAT;
-	
+		// ignore the response
+		ignore = SPI0DAT;
 }
 
 char spi_read_byte() {
 	// write dummy byte to get next byte
 		SPIF = 0;
-		SPI0DAT = 0xCC;
-		while (SPIF == 0); // wait end of SPI transmission		
+		SPI0DAT = 0x00;
+		while (SPIF == 0); // wait end of SPI transmission
+		// return the response
 		return SPI0DAT;
+}
+
+char adxl_read_byte(char reg_address) {
+	
+	// construct command byte
+	// mode READ, single byte
+	cmd = 0x80;
+	
+	// add register address
+	cmd |= reg_address;
+	
+	SS = 0;
+	spi_write_byte(cmd);
+	rep = spi_read_byte();
+	// end of transaction
+		SS = 1;
+	return rep;
 }
 
 //------------------------------------------------------------------------------------
@@ -286,16 +306,11 @@ void main (void)
 		//  1 (read) 1 (MultiByte) 11 0010 (address)
 		//  = 0xF2
 		LED = 1;
-		SS = 0;
 		
-
-		//spi_write(0xF2); // cmd get data 
-		spi_write_byte(0x80); // cmd get DEV ID
 		
-		rep = spi_read_byte();
+		rep = adxl_read_byte(0x00); // get DEV ID
 		
-		// end of transaction
-		SS = 1;
+		
 		fct_tempo(20*1000);
 		LED = 0;
 		
