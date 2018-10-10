@@ -51,6 +51,12 @@ char ascii[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 int hum = 0;
 int temp = 0;
 
+int tmp = 0;
+float value = 0.0f;
+float dataX = 0.0f;
+float dataY = 0.0f;
+float dataZ = 0.0f;
+
 void config_serie() {
 	
 	
@@ -153,93 +159,6 @@ char get_octet(int pos) {
 	return octet;
 }
 
-void convert_values() {
-	
-	temp = get_octet(0);
-	hum = get_octet(16);
-	
-}
-
-void prepare_result() {
-	clear_buf();
-	i = 0;
-	buf[i++] = 'T';
-	buf[i++] = '=';
-	buf[i++] = ascii[temp/10];
-	buf[i++] = ascii[temp%10];
-	buf[i++] = '°';
-	buf[i++] = 'C';
-	buf[i++] = ' ';
-	
-	buf[i++] = 'R';
-	buf[i++] = 'H';
-	buf[i++] = '=';
-	buf[i++] = ascii[hum/10];
-	buf[i++] = ascii[hum%10];
-	buf[i++] = '%';
-	
-	buf[i++] = '\r';
-	buf[i++] = '\n';
-	buf[i++] = '\0';
-}
-	
-void rht_input_mode() {
-	
-	// Pin 2.0
-	
-	// open drain
-	P2MDOUT &= ~0x01;
-	P2MDOUT &= ~0x02;
-	
-	RHT = 1;
-	
-}
-
-void rht_output_mode() {
-	P2MDOUT |= 0x01;
-	P2MDOUT |= 0x02;
-}
-
-void rht_wait_one() {
-	while (RHT != 1);
-}
-
-void rht_wait_zero() {
-	while (RHT != 0);
-}
-
-void rht_receive() {
-	
-	rht_wait_one();
-	
-	rht_wait_zero();
-	
-	//LED=0;
-	
-	i = 0;
-	do {
-	
-		rht_wait_one();
-		
-		fct_tempo(50);
-		
-		if (RHT == 0) {
-			// bit 0 reçu
-			//LED=1;
-			buf[i] = '0';
-		} else if (RHT == 1) {
-			// bit 1 reçu
-			//LED=1;
-			buf[i] = '1';
-		}
-		rht_wait_zero();
-		//LED=0;
-		i++;
-	} while( i < 40 );
-	
-	buf[i++] = 'e';
-	buf[i++] = '\n';
-}
 
 void spi_write_byte(char byte) {
 	
@@ -326,6 +245,20 @@ void config_adxl() {
 	
 }
 
+float adxl_convert_value(char high_byte, char low_byte) {
+	
+	value = 0.0f;
+	
+	// la conversion n'est pas correcte
+	
+	tmp = high_byte << 8;
+	tmp |= low_byte;
+	
+	value = tmp*3.9f;
+	
+	return value;
+}
+
 //------------------------------------------------------------------------------------
 // MAIN Routine
 //------------------------------------------------------------------------------------
@@ -339,7 +272,6 @@ void main (void)
 	XBR2      = 0x40;
 	
 	// green led
-	
 	// broche P1.6 (green led) en mode 0 open-drain
 	P1MDOUT |= 0x40;
 	
@@ -353,27 +285,19 @@ void main (void)
   
   while (1)
   {
-		
-		// envoi SPI
-		// on envoie 0xF2 pour demander la lecture des 3 axes
-		//  1 (read) 1 (MultiByte) 11 0010 (address)
-		//  = 0xF2
 		LED = 1;
 		
-		
+		// On va lire les 6 registres contenant les valeurs mesurées 
 		rep = adxl_read(0x32, 6);
-		
 		
 		fct_tempo(20*1000);
 		LED = 0;
 		
-		
-		// read sent byte
-		//buf[0] = SPI0DAT;
+		// Les données reçues sont maintenant dans adxl_buf
+		// Il reste à les convertir puis les afficher
 		
 		
 		wait_sec(2);
-		//send_buf(15);
 	}	 	 
 }
 
