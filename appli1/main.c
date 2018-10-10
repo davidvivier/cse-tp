@@ -38,7 +38,7 @@ char bit_value = 0;
 
 char buf[BUF_SIZE];
 
-char adxl_buf[48];
+char adxl_buf[6];
 
 char rep = 0;
 char ignore = 0;
@@ -259,10 +259,12 @@ char spi_read_byte() {
 		return SPI0DAT;
 }
 
+
+
 char adxl_read(char reg_address, int n) {
 	
-	for (i = 0; i < 48; i++) {
-		adxl_buf[i] = 0;
+	for (i = 0; i < 6; i++) {
+		adxl_buf[i] = 0x00;
 	}
 	
 	// construct command byte
@@ -296,6 +298,34 @@ char adxl_read(char reg_address, int n) {
 	return i;
 }
 
+void adxl_write(char reg_address, char value) {
+	
+	// construct command byte
+	// mode WRITE single-bit
+	cmd = 0x00;
+	
+	// add register address
+	cmd |= reg_address;
+	
+	// write full sequence
+	SS = 0;
+	spi_write_byte(cmd);
+	spi_write_byte(value);
+	SS = 1;
+	
+}
+
+void config_adxl() {
+	
+	fct_tempo(1100);
+	
+	// init sequence
+	adxl_write(0x31, 0x0B);
+	adxl_write(0x2D, 0x08);
+	adxl_write(0x2E, 0x80);
+	
+}
+
 //------------------------------------------------------------------------------------
 // MAIN Routine
 //------------------------------------------------------------------------------------
@@ -317,6 +347,7 @@ void main (void)
 	
 	config_spi();
 	
+	config_adxl();
 	
 	SBUF0 = 's';
   
