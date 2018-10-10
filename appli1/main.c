@@ -38,7 +38,7 @@ char bit_value = 0;
 
 char buf[BUF_SIZE];
 
-
+char rep = 0;
 
 // '0' est à 48 ascii
 char ascii[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
@@ -205,12 +205,6 @@ void rht_wait_zero() {
 
 void rht_receive() {
 	
-	
-
-	
-	
-
-	
 	rht_wait_one();
 	
 	rht_wait_zero();
@@ -242,7 +236,23 @@ void rht_receive() {
 	buf[i++] = '\n';
 }
 
+void spi_write_byte(char byte) {
+	
+		SPIF = 0;
+		SPI0DAT = byte;
+		while (SPIF == 0); // wait end of SPI transmission
+		// on ignore la réponse
+		rep = SPI0DAT;
+	
+}
 
+char spi_read_byte() {
+	// write dummy byte to get next byte
+		SPIF = 0;
+		SPI0DAT = 0xCC;
+		while (SPIF == 0); // wait end of SPI transmission		
+		return SPI0DAT;
+}
 
 //------------------------------------------------------------------------------------
 // MAIN Routine
@@ -271,9 +281,31 @@ void main (void)
   while (1)
   {
 		
+		// envoi SPI
+		// on envoie 0xF2 pour demander la lecture des 3 axes
+		//  1 (read) 1 (MultiByte) 11 0010 (address)
+		//  = 0xF2
+		LED = 1;
+		SS = 0;
+		
+
+		//spi_write(0xF2); // cmd get data 
+		spi_write_byte(0x80); // cmd get DEV ID
+		
+		rep = spi_read_byte();
+		
+		// end of transaction
+		SS = 1;
+		fct_tempo(20*1000);
+		LED = 0;
 		
 		
-			//send_buf(15);
+		// read sent byte
+		//buf[0] = SPI0DAT;
+		
+		
+		wait_sec(2);
+		//send_buf(15);
 	}	 	 
 }
 
