@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include "init.h"
 
-#define BUF_SIZE 50
+#define BUF_SIZE 20
 
 
 void fct_tempo(int csg_tempo);
@@ -37,6 +37,8 @@ char octet = 0;
 char bit_value = 0;
 
 char buf[BUF_SIZE];
+
+char adxl_buf[48];
 
 char rep = 0;
 char ignore = 0;
@@ -249,29 +251,49 @@ void spi_write_byte(char byte) {
 }
 
 char spi_read_byte() {
-	// write dummy byte to get next byte
 		SPIF = 0;
-		SPI0DAT = 0x00;
+	// write dummy byte to get next byte
+		SPI0DAT = 0x80;
 		while (SPIF == 0); // wait end of SPI transmission
-		// return the response
+		// return the received byte
 		return SPI0DAT;
 }
 
-char adxl_read_byte(char reg_address) {
+char adxl_read(char reg_address, int n) {
+	
+	for (i = 0; i < 48; i++) {
+		adxl_buf[i] = 0;
+	}
 	
 	// construct command byte
-	// mode READ, single byte
+	// mode READ
 	cmd = 0x80;
+	
+	if (n < 1) {
+		return 0x00; // error
+	}
+	
+	if (n > 1) {
+		// multi-byte : MB = 1
+		cmd |= 0x40;
+	}
 	
 	// add register address
 	cmd |= reg_address;
 	
+	i = 0;
 	SS = 0;
 	spi_write_byte(cmd);
-	rep = spi_read_byte();
+	while (i < n) {
+		adxl_buf[i] = spi_read_byte();
+		i++;
+	}
+	
 	// end of transaction
-		SS = 1;
-	return rep;
+	SS = 1;
+	
+	// return number of bytes read
+	return i;
 }
 
 //------------------------------------------------------------------------------------
@@ -308,7 +330,7 @@ void main (void)
 		LED = 1;
 		
 		
-		rep = adxl_read_byte(0x00); // get DEV ID
+		rep = adxl_read(0x32, 6);
 		
 		
 		fct_tempo(20*1000);
